@@ -1,0 +1,60 @@
+include irvine32.inc
+
+.data
+    row dword ?
+    alp byte 65
+    msg1 byte "Enter number of rows: ", 0
+    count dword 1
+    space byte " ", 0
+
+.code 
+main proc
+    mov edx, offset msg1
+    call writestring
+    call readint
+    mov row, eax
+    shl eax, 1  ; eax = 2 * rows (to handle both upper and lower parts of the diamond)
+    sub eax, 1  ; eax = 2 * rows - 1 (total rows in diamond)
+    mov ecx, eax
+
+    ; Upper part of the diamond
+    mov eax, row
+    mov count, 1
+    upper_part:
+        mov ebx, eax         ; ebx = number of leading spaces
+        sub ebx, count       ; adjust leading spaces for current row
+        call print_spaces    ; print leading spaces
+
+        mov ebx, count
+        mov ecx, ebx         ; ecx = number of characters to print
+        call print_chars     ; print characters
+
+        call crlf            ; move to the next line
+        inc count            ; increase the row count
+        loop upper_part      ; repeat for the next row
+
+    ; Lower part of the diamond
+    mov count, row
+    dec count
+    lower_part:
+        mov ebx, row         ; ebx = number of leading spaces
+        sub ebx, count       ; adjust leading spaces for current row
+        call print_spaces    ; print leading spaces
+
+        mov ebx, count
+        mov ecx, ebx         ; ecx = number of characters to print
+        call print_chars     ; print characters
+
+        call crlf            ; move to the next line
+        dec count            ; decrease the row count
+        loop lower_part      ; repeat for the next row
+
+    exit
+main endp
+
+print_spaces proc
+    mov ecx, ebx
+    print_space_loop:
+        mov al, space
+        call writechar
+        loop prin

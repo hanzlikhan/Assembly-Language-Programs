@@ -1,0 +1,149 @@
+#include <iostream>
+#include <unordered_map>
+#include <stack>
+#include <list>
+#include <cctype> // For std::tolower()
+
+using namespace std;
+
+// Define ChessPiece structure
+struct ChessPiece {
+    char pieceType; // 'K' for king, 'Q' for queen, 'R' for rook, 'B' for bishop, 'N' for knight, 'P' for pawn
+    bool isWhite;   // true for white pieces, false for black pieces
+
+    ChessPiece(char type, bool color) : pieceType(type), isWhite(color) {}
+};
+
+// Define ChessBoard class
+class ChessBoard {
+private:
+    unordered_map<char, list<pair<int, int>>> piecePositions; // Hashmap to store piece positions
+    stack<pair<pair<int, int>, pair<int, int>>> moveHistory; // Stack to store move history for undo/redo
+    bool whiteTurn; // Flag to track whose turn it is
+
+public:
+    ChessBoard() : whiteTurn(true) {}
+
+    // Function to initialize the chess board with pieces
+    void initializeBoard() {
+        // Code to initialize the board with pieces
+        // For simplicity, let's assume a starting chess position
+        piecePositions.clear(); // Clear existing positions
+
+        // White pieces
+        piecePositions['K'] = {{0, 4}};
+        piecePositions['Q'] = {{0, 3}};
+        piecePositions['R'] = {{0, 0}, {0, 7}};
+        piecePositions['B'] = {{0, 2}, {0, 5}};
+        piecePositions['N'] = {{0, 1}, {0, 6}};
+        piecePositions['P'] = {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}};
+
+        // Black pieces
+        piecePositions['k'] = {{7, 4}};
+        piecePositions['q'] = {{7, 3}};
+        piecePositions['r'] = {{7, 0}, {7, 7}};
+        piecePositions['b'] = {{7, 2}, {7, 5}};
+        piecePositions['n'] = {{7, 1}, {7, 6}};
+        piecePositions['p'] = {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {6, 6}, {6, 7}};
+    }
+
+    // Function to move a chess piece
+    void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
+        // Check if the move is valid (not implemented in this simplified version)
+        // Assume the move is valid for now
+
+        // Store the move in history
+        moveHistory.push({{fromRow, fromCol}, {toRow, toCol}});
+
+        // Move the piece on the board
+        char piece = getPieceAtPosition(fromRow, fromCol);
+        piecePositions[piece].remove({fromRow, fromCol});
+        piecePositions[piece].push_back({toRow, toCol});
+
+        // Switch turn
+        whiteTurn = !whiteTurn;
+    }
+
+    // Function to undo the last move
+    void undoMove() {
+        if (!moveHistory.empty()) {
+            auto lastMove = moveHistory.top();
+            moveHistory.pop();
+
+            char piece = getPieceAtPosition(lastMove.second.first, lastMove.second.second);
+            piecePositions[piece].remove({lastMove.second.first, lastMove.second.second});
+            piecePositions[piece].push_back({lastMove.first.first, lastMove.first.second});
+
+            // Switch turn
+            whiteTurn = !whiteTurn;
+        }
+    }
+
+    // Function to redo the last undone move
+    void redoMove() {
+        // Not implemented in this simplified version
+    }
+
+    // Function to get the piece at a given position
+    char getPieceAtPosition(int row, int col) {
+        for (auto& entry : piecePositions) {
+            for (auto& pos : entry.second) {
+                if (pos.first == row && pos.second == col) {
+                    return entry.first;
+                }
+            }
+        }
+        return ' '; // Empty space if no piece found
+    }
+
+    // Function to display the chess board
+    void displayBoard() {
+        for (int row = 0; row < 8; ++row) {
+            for (int col = 0; col < 8; ++col) {
+                char piece = getPieceAtPosition(row, col);
+                if (piece == ' ') {
+                    cout << "- ";
+                } else {
+                    cout << piece << " ";
+                }
+            }
+            cout << endl;
+        }
+    }
+
+    // Function to check if it's white's turn
+    bool isWhiteTurn() {
+        return whiteTurn;
+    }
+};
+
+int main() {
+    ChessBoard board;
+    board.initializeBoard();
+    board.displayBoard();
+
+    while (true) {
+        // Prompt for input
+        cout << endl;
+        if (board.isWhiteTurn()) {
+            cout << "White's turn." << endl;
+        } else {
+            cout << "Black's turn." << endl;
+        }
+        cout << "Enter move (e.g., a2a4): ";
+        string move;
+        cin >> move;
+
+        // Convert input to coordinates
+        int fromRow = 8 - (move[1] - '0');
+        int fromCol = move[0] - 'a';
+        int toRow = 8 - (move[3] - '0');
+        int toCol = move[2] - 'a';
+
+        // Move piece
+        board.movePiece(fromRow, fromCol, toRow, toCol);
+        board.displayBoard();
+    }
+
+    return 0;
+}

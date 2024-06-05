@@ -1,0 +1,118 @@
+#include <iostream>
+#include <unordered_map>
+#include <list>
+#include <algorithm>
+
+using namespace std;
+
+class Book {
+public:
+    string title;
+    string author;
+    string isbn;
+    string category;
+    bool available;
+
+    Book(string _title, string _author, string _isbn, string _category) : title(_title), author(_author), isbn(_isbn), category(_category), available(true) {}
+};
+
+class Library {
+private:
+    unordered_map<string, list<Book>> categories;
+    list<Book> borrowed_stack;
+
+public:
+    void add_book(string title, string author, string isbn, string category) {
+        Book book(title, author, isbn, category);
+        categories[category].push_back(book);
+    }
+
+    bool remove_book(string isbn) {
+        for (auto& category : categories) {
+            auto& books = category.second;
+            for (auto it = books.begin(); it != books.end(); ++it) {
+                if (it->isbn == isbn) {
+                    books.erase(it);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    vector<Book> search_book(string key) {
+        vector<Book> results;
+        for (auto& category : categories) {
+            for (auto& book : category.second) {
+                if (key.find(book.title) != string::npos || key.find(book.author) != string::npos || key.find(book.isbn) != string::npos || key.find(book.category) != string::npos) {
+                    results.push_back(book);
+                }
+            }
+        }
+        return results;
+    }
+
+    bool borrow_book(string isbn) {
+        for (auto& category : categories) {
+            auto& books = category.second;
+            for (auto& book : books) {
+                if (book.isbn == isbn && book.available) {
+                    book.available = false;
+                    borrowed_stack.push_back(book);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool return_book(string isbn) {
+        for (auto it = borrowed_stack.begin(); it != borrowed_stack.end(); ++it) {
+            if (it->isbn == isbn) {
+                it->available = true;
+                borrowed_stack.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void sort_books(string key) {
+        for (auto& category : categories) {
+            auto& books = category.second;
+            if (key == "title") {
+                books.sort([](const Book& a, const Book& b) { return a.title < b.title; });
+            } else if (key == "author") {
+                books.sort([](const Book& a, const Book& b) { return a.author < b.author; });
+            } else if (key == "category") {
+                books.sort([](const Book& a, const Book& b) { return a.category < b.category; });
+            } else if (key == "availability") {
+                books.sort([](const Book& a, const Book& b) { return a.available > b.available; });
+            }
+        }
+    }
+};
+
+int main() {
+    Library library;
+    library.add_book("Book1", "Author1", "123456", "Fiction");
+    library.add_book("Book2", "Author2", "654321", "Non-Fiction");
+
+    cout << "Before sorting by title:" << endl;
+    for (auto& category : library.categories) {
+        for (auto& book : category.second) {
+            cout << book.title << " (" << book.author << ")" << endl;
+        }
+    }
+
+    library.sort_books("title");
+
+    cout << "\nAfter sorting by title:" << endl;
+    for (auto& category : library.categories) {
+        for (auto& book : category.second) {
+            cout << book.title << " (" << book.author << ")" << endl;
+        }
+    }
+
+    return 0;
+}
